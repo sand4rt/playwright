@@ -17,7 +17,7 @@
 import type { Locator } from 'playwright/test';
 import type { JsonObject } from '@playwright/experimental-ct-core/types/component';
 import type { TestType } from '@playwright/experimental-ct-core';
-import type { Type } from '@angular/core';
+import type { EnvironmentProviders, Provider, Type } from '@angular/core';
 
 export type ComponentEvents = Record<string, Function>;
 
@@ -25,6 +25,10 @@ export interface MountOptions<HooksConfig extends JsonObject, Component> {
   props?: Partial<Component> | Record<string, unknown>, // TODO: filter props and handle signals
   on?: ComponentEvents;
   hooksConfig?: HooksConfig;
+  imports?: (Type<any> | ReadonlyArray<any>)[]
+  environmentProviders?: (EnvironmentProviders | Provider)[]
+  providers?: Provider[]
+  viewProviders?: Provider[]
 }
 
 export interface MountResult<Component> extends Locator {
@@ -37,7 +41,7 @@ export interface MountResult<Component> extends Locator {
 
 export const test: TestType<{
   mount<HooksConfig extends JsonObject, Component = unknown>(
-    component: Type<Component>,
+    component: Type<Component> | string,
     options?: MountOptions<HooksConfig, Component>
   ): Promise<MountResult<Component>>;
 }>;

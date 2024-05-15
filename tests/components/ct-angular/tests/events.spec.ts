@@ -12,7 +12,7 @@ test('emit an submit event when the button is clicked', async ({ mount }) => {
       submit: (data: string) => messages.push(data),
     },
   });
-  await component.click();
+  await component.locator('css=button').click();
   expect(messages).toEqual(['hello']);
 });
 
@@ -38,7 +38,7 @@ test('replace existing listener when new listener is set', async ({
     },
   });
 
-  await component.click();
+  await component.locator('css=button').click();
   expect(called).toBe(true);
 });
 

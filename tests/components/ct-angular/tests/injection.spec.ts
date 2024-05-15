@@ -1,4 +1,4 @@
-import { InjectComponent, TOKEN } from '@/components/inject.component';
+import { InjectComponent } from '@/components/inject.component';
 import { expect, test } from '@playwright/experimental-ct-angular';
 import type { HooksConfig } from 'playwright';
 

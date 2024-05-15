@@ -25,7 +25,9 @@ test('update event listeners without remounting', async ({ mount }) => {
       submit: (data: string) => messages.push(data),
     },
   });
-  await component.click();
+  await component.locator('css=div').first().click({
+    position: { x: 0, y: 0 }
+  });
   expect(messages).toEqual(['hello']);
 
   await expect(component.getByTestId('remount-count')).toContainText('1');

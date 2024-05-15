@@ -10,6 +10,12 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
       <ng-content></ng-content>
     </div>
   `,
+  styles: [`
+    :host {
+      display: block;
+      padding: 20px;
+    }
+  `]
 })
 export class CounterComponent {
   remountCount = Number(localStorage.getItem('remountCount'));

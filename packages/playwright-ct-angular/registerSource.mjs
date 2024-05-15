@@ -20,12 +20,13 @@
 /** @typedef {import('../playwright-ct-core/types/component').ObjectComponent} ObjectComponent */
 
 import 'zone.js';
-import { reflectComponentType } from '@angular/core';
-import { getTestBed, TestBed } from '@angular/core/testing';
 import {
-  BrowserDynamicTestingModule,
-  platformBrowserDynamicTesting,
-} from '@angular/platform-browser-dynamic/testing';
+  Component,
+  EventEmitter,
+  reflectComponentType
+} from '@angular/core';
+import { getTestBed, TestBed } from '@angular/core/testing';
+import { BrowserDynamicTestingModule, platformBrowserDynamicTesting, } from '@angular/platform-browser-dynamic/testing';
 
 /** @type {WeakMap<import('@angular/core/testing').ComponentFixture, Record<string, import('rxjs').Subscription>>} */
 const __pwOutputSubscriptionRegistry = new WeakMap();
@@ -39,26 +40,84 @@ getTestBed().initTestEnvironment(
 );
 
 /**
- * @param {ObjectComponent} component
+ * @param {ObjectComponent & MountOptions} component
+ * @param {boolean} isTemplate
  */
-async function __pwRenderComponent(component) {
+async function __pwConfigureComponent(component, isTemplate = false) {
   const componentMetadata = reflectComponentType(component.type);
   if (!componentMetadata?.isStandalone)
     throw new Error('Only standalone components are supported');
 
   TestBed.configureTestingModule({
     imports: [component.type],
-  });
+  })
+
+  if (component.environmentProviders) {
+    TestBed.configureTestingModule({
+      providers: component.environmentProviders
+    })
+  }
+
+  if (component.imports && !isTemplate) {
+    TestBed.configureTestingModule({
+      imports: component.imports,
+    })
+  }
+
+  if (component.providers) {
+    TestBed.overrideComponent(component.type, {
+      add: {
+        providers: component.providers,
+      }
+    })
+  }
+
+  if (component.viewProviders) {
+    TestBed.overrideComponent(component.type, {
+      add: {
+        viewProviders: component.viewProviders,
+      }
+    })
+  }
 
   await TestBed.compileComponents();
+}
 
-  const fixture = TestBed.createComponent(component.type);
-  fixture.nativeElement.id = 'root';
+/**
+ * @param {ObjectComponent & MountOptions} component
+ */
+function __pwConfigureTemplate(component) {
+  const inputs = Object.keys(component.props ?? {})
+  const outputs = Object.keys(component.on ?? {})
+  component.type = Component({
+    standalone: true,
+    imports: component.imports,
+    template: component.type,
+    inputs: inputs,
+    outputs: outputs
+  })(class WrapperComponent {
+    constructor() {
+      for (const output of outputs) {
+        this[output] = new EventEmitter()
+      }
+    }
+  })
+}
+
+/**
+ * @param {ObjectComponent & MountOptions} component
+ * @param {HTMLElement} rootElement
+ */
+function __pwRenderComponent(component, rootElement) {
+  const fixture = TestBed.createComponent(component.type)
+
+  rootElement.replaceChildren(fixture.nativeElement)
+  document.body.replaceChildren(rootElement)
 
   __pwUpdateProps(fixture, component.props);
   __pwUpdateEvents(fixture, component.on);
 
-  fixture.autoDetectChanges();
+  fixture.autoDetectChanges(true);
 
   return fixture;
 }
@@ -75,18 +134,23 @@ function __pwUpdateProps(fixture, props = {}) {
  * @param {import('@angular/core/testing').ComponentFixture} fixture
  */
 function __pwUpdateEvents(fixture, events = {}) {
+  const { outputs } = reflectComponentType(fixture.componentRef.componentType)
   const outputSubscriptionRecord =
     __pwOutputSubscriptionRegistry.get(fixture) ?? {};
-  for (const [name, listener] of Object.entries(events)) {
+  for (const { propName, templateName} of outputs) {
+    const listener = events[templateName]
+    if (!listener) {
+      continue
+    }
     /* Unsubscribe previous listener. */
-    outputSubscriptionRecord[name]?.unsubscribe();
+    outputSubscriptionRecord[propName]?.unsubscribe();
 
     const subscription = fixture.componentInstance[
-        name
+      propName
     ].subscribe((/** @type {unknown} */ event) => listener(event));
 
     /* Store new subscription. */
-    outputSubscriptionRecord[name] = subscription;
+    outputSubscriptionRecord[propName] = subscription;
   }
 
   /* Update output subscription registry. */
@@ -100,7 +164,15 @@ window.playwrightMount = async (component, rootElement, hooksConfig) => {
   for (const hook of window.__pw_hooks_before_mount || [])
     await hook({ hooksConfig, TestBed });
 
-  const fixture = await __pwRenderComponent(component);
+  const isTemplate = typeof component.type === "string"
+
+  if (isTemplate) {
+    __pwConfigureTemplate(component)
+  }
+
+  await __pwConfigureComponent(component, isTemplate)
+
+  const fixture = __pwRenderComponent(component, rootElement);
 
   for (const hook of window.__pw_hooks_after_mount || [])
     await hook({ hooksConfig });

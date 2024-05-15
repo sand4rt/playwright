@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 
 @Component({
   standalone: true,
+  selector: 'app-named-slots',
   template: `
     <div>
       <header>

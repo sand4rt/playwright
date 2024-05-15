@@ -28,6 +28,7 @@ export default defineConfig({
     ctViteConfig: {
       plugins: [angular({
         tsconfig: resolve('./tsconfig.spec.json'),
+        jit: true // must use jit otherwise TestBed.overrideComponent fails
       }) as any], // TODO: remove any and resolve various installed conflicting Vite versions
       resolve: {
         alias: {
