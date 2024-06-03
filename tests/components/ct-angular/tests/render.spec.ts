@@ -39,3 +39,8 @@ test('render component with not inlined template', async ({ mount }) => {
   const component = await mount(NotInlinedComponent);
   await expect(component).toContainText('Not Inlined');
 });
+
+test('return a locator of the component\'s host element', async ({ mount }) => {
+  const component = await mount(ComponentComponent);
+  expect(await component.innerHTML()).toBe('<div>test</div>');
+});

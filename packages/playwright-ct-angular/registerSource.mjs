@@ -21,7 +21,7 @@
 
 import 'zone.js';
 import { reflectComponentType } from '@angular/core';
-import { getTestBed, TestBed } from '@angular/core/testing';
+import { getTestBed, TestBed, TestComponentRenderer } from '@angular/core/testing';
 import {
   BrowserDynamicTestingModule,
   platformBrowserDynamicTesting,
@@ -38,22 +38,49 @@ getTestBed().initTestEnvironment(
     platformBrowserDynamicTesting(),
 );
 
+class PlaywrightTestComponentRenderer extends TestComponentRenderer {
+
+  constructor(rootElement) {
+    super();
+    this._children = [];
+    this._rootElement = rootElement;
+  }
+
+  insertRootElement(testRootElementId) {
+    const testRootElement = document.createElement('div');
+    testRootElement.id = testRootElementId;
+    this._children.push(testRootElement);
+    this._rootElement.appendChild(testRootElement);
+  }
+
+  removeAllRootElements() {
+    for (const child of this._children)
+      this._rootElement.removeChild(child);
+    this._children = [];
+  }
+}
+
 /**
  * @param {ObjectComponent} component
  */
-async function __pwRenderComponent(component) {
+async function __pwRenderComponent(component, rootElement) {
   const componentMetadata = reflectComponentType(component.type);
   if (!componentMetadata?.isStandalone)
     throw new Error('Only standalone components are supported');
 
   TestBed.configureTestingModule({
     imports: [component.type],
+    providers: [
+      {
+        provide: TestComponentRenderer,
+        useValue: new PlaywrightTestComponentRenderer(rootElement)
+      }
+    ]
   });
 
   await TestBed.compileComponents();
 
   const fixture = TestBed.createComponent(component.type);
-  fixture.nativeElement.id = 'root';
 
   __pwUpdateProps(fixture, component.props);
   __pwUpdateEvents(fixture, component.on);
@@ -100,7 +127,7 @@ window.playwrightMount = async (component, rootElement, hooksConfig) => {
   for (const hook of window.__pw_hooks_before_mount || [])
     await hook({ hooksConfig, TestBed });
 
-  const fixture = await __pwRenderComponent(component);
+  const fixture = await __pwRenderComponent(component, rootElement);
 
   for (const hook of window.__pw_hooks_after_mount || [])
     await hook({ hooksConfig });
