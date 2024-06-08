@@ -18,11 +18,15 @@ for (const dir of fs.readdirSync(__dirname)) {
       await run('npm', ['run', 'typecheck'], folder);
     });
 
+    test('lint', async () => {
+      await run('npm', ['run', 'lint'], folder);
+    });
+
     for (const project of ['chromium', 'firefox', 'webkit']) {
       test(project, async () => {
         await run('npx', ['playwright', 'test', '--project=' + project, '--reporter=list'], folder);
       });
-    } 
+    }
   });
 }
 

@@ -7,8 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "serve": "vite preview",
-    "typecheck": "tsc --noEmit"
-  },
+    "typecheck": "tsc --noEmit",
+    "lint": ""
+ },
   "license": "MIT",
   "dependencies": {
     "@solidjs/router": "^0.8.2",

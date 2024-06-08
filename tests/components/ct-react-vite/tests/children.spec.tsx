@@ -1,3 +1,19 @@
+/**
+ * Copyright (c) Microsoft Corporation.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import { test, expect } from '@playwright/experimental-ct-react';
 import Button from '@/components/Button';
 import CheckChildrenProp from '@/components/CheckChildrenProp';
@@ -6,26 +22,26 @@ import MultipleChildren from '@/components/MultipleChildren';
 
 test('render a default child', async ({ mount }) => {
   const component = await mount(
-    <DefaultChildren>Main Content</DefaultChildren>
+      <DefaultChildren>Main Content</DefaultChildren>
   );
   await expect(component).toContainText('Main Content');
 });
 
 test('render a component as child', async ({ mount }) => {
   const component = await mount(
-    <DefaultChildren>
-      <Button title="Submit" />
-    </DefaultChildren>
+      <DefaultChildren>
+        <Button title="Submit" />
+      </DefaultChildren>
   );
   await expect(component).toContainText('Submit');
 });
 
 test('render multiple children', async ({ mount }) => {
   const component = await mount(
-    <DefaultChildren>
-      <div data-testid="one">One</div>
-      <div data-testid="two">Two</div>
-    </DefaultChildren>
+      <DefaultChildren>
+        <div data-testid="one">One</div>
+        <div data-testid="two">Two</div>
+      </DefaultChildren>
   );
   await expect(component.getByTestId('one')).toContainText('One');
   await expect(component.getByTestId('two')).toContainText('Two');
@@ -33,11 +49,11 @@ test('render multiple children', async ({ mount }) => {
 
 test('render named children', async ({ mount }) => {
   const component = await mount(
-    <MultipleChildren>
-      <div>Header</div>
-      <div>Main Content</div>
-      <div>Footer</div>
-    </MultipleChildren>
+      <MultipleChildren>
+        <div>Header</div>
+        <div>Main Content</div>
+        <div>Footer</div>
+      </MultipleChildren>
   );
   await expect(component).toContainText('Header');
   await expect(component).toContainText('Main Content');
@@ -50,7 +66,7 @@ test('render string as child', async ({ mount }) => {
 });
 
 test('render array as child', async ({ mount }) => {
-  const component = await mount(<DefaultChildren>{[<h4>{[4]}</h4>,[[<p>[2,3]</p>]]]}</DefaultChildren>);
+  const component = await mount(<DefaultChildren>{[<h4>{[4]}</h4>, [[<p>[2,3]</p>]]]}</DefaultChildren>);
   await expect(component.getByRole('heading', { level: 4 })).toHaveText('4');
   await expect(component.getByRole('paragraph')).toHaveText('[2,3]');
 });
